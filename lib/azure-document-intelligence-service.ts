@@ -4,6 +4,14 @@ import { DocumentAnalysisClient, AzureKeyCredential } from "@azure/ai-form-recog
 import { DocumentType } from "@prisma/client";
 import { readFile } from "fs/promises";
 
+// Helper function to safely extract error messages
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
+}
+
 export interface AzureDocumentIntelligenceConfig {
   endpoint: string;
   apiKey: string;
@@ -190,13 +198,14 @@ export class AzureDocumentIntelligenceService {
           }
         }
         
-      } catch (modelError: any) {
-        console.warn('⚠️ [Azure DI] Tax model failed, attempting fallback to OCR model:', modelError?.message);
+      } catch (modelError: unknown) {
+        const modelErrorMessage = getErrorMessage(modelError);
+        console.warn('⚠️ [Azure DI] Tax model failed, attempting fallback to OCR model:', modelErrorMessage);
         
         // Check if it's a ModelNotFound error
-        if (modelError?.message?.includes('ModelNotFound') || 
-            modelError?.message?.includes('Resource not found') ||
-            modelError?.code === 'NotFound') {
+        if (modelErrorMessage.includes('ModelNotFound') || 
+            modelErrorMessage.includes('Resource not found') ||
+            (modelError instanceof Error && 'code' in modelError && modelError.code === 'NotFound')) {
           
           console.log('🔍 [Azure DI] Falling back to prebuilt-read model for OCR extraction...');
           
@@ -239,9 +248,9 @@ export class AzureDocumentIntelligenceService {
       }
       
       return extractedData;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ [Azure DI] Processing error:', error);
-      throw new Error(`Azure Document Intelligence processing failed: ${error?.message || 'Unknown error'}`);
+      throw new Error(`Azure Document Intelligence processing failed: ${getErrorMessage(error)}`);
     }
   }
 
@@ -289,9 +298,9 @@ export class AzureDocumentIntelligenceService {
         fullText: extractedData.fullText as string,
         correctedDocumentType: extractedData.correctedDocumentType
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ [Azure DI] W2 extraction failed:', error);
-      throw new Error(`W2 extraction failed: ${error?.message || 'Unknown error'}`);
+      throw new Error(`W2 extraction failed: ${getErrorMessage(error)}`);
     }
   }
 
@@ -331,9 +340,9 @@ export class AzureDocumentIntelligenceService {
         fullText: extractedData.fullText as string,
         correctedDocumentType: extractedData.correctedDocumentType
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ [Azure DI] 1099-DIV extraction failed:', error);
-      throw new Error(`1099-DIV extraction failed: ${error?.message || 'Unknown error'}`);
+      throw new Error(`1099-DIV extraction failed: ${getErrorMessage(error)}`);
     }
   }
 
@@ -371,9 +380,9 @@ export class AzureDocumentIntelligenceService {
         fullText: extractedData.fullText as string,
         correctedDocumentType: extractedData.correctedDocumentType
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ [Azure DI] 1099-INT extraction failed:', error);
-      throw new Error(`1099-INT extraction failed: ${error?.message || 'Unknown error'}`);
+      throw new Error(`1099-INT extraction failed: ${getErrorMessage(error)}`);
     }
   }
 
@@ -412,9 +421,9 @@ export class AzureDocumentIntelligenceService {
         fullText: extractedData.fullText as string,
         correctedDocumentType: extractedData.correctedDocumentType
       };
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ [Azure DI] 1099-MISC extraction failed:', error);
-      throw new Error(`1099-MISC extraction failed: ${error?.message || 'Unknown error'}`);
+      throw new Error(`1099-MISC extraction failed: ${getErrorMessage(error)}`);
     }
   }
 
