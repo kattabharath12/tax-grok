@@ -10,6 +10,12 @@ interface ExtractedField {
   type?: 'object' | 'array' | 'address' | 'simple';
 }
 
+export interface ExtractedFieldData {
+  [key: string]: any;
+  fullText?: string;
+  correctedDocumentType?: string;
+}
+
 interface ProcessedDocument {
   [fieldName: string]: ExtractedField;
 }
@@ -435,10 +441,84 @@ export function getAzureDocumentIntelligenceService(): ComprehensiveAzureExtract
   }
   
   return new ComprehensiveAzureExtractionService(config);
+  /**
+ * Backward compatibility method for existing route code
+ */
+async extractDataFromDocument(filePath: string, documentType: string): Promise<ExtractedFieldData & { correctedDocumentType?: string }> {
+  try {
+    // Use the comprehensive extraction
+    const result = await this.processSingleDocument(filePath);
+    
+    if (!result || !result.success) {
+      throw new Error('Failed to extract data from document');
+    }
+    
+    // Extract the first document's data (assuming single document per file)
+    const firstDoc = result.documents[0];
+    if (!firstDoc) {
+      throw new Error('No document data extracted');
+    }
+    
+    // Flatten the structured data to match expected format
+    const extractedData: ExtractedFieldData = {};
+    
+    // Convert the comprehensive extraction format to flat format
+    for (const [key, fieldData] of Object.entries(firstDoc)) {
+      if (fieldData && typeof fieldData === 'object' && 'value' in fieldData) {
+        // Handle different field types
+        if (fieldData.type === 'object' && fieldData.value) {
+          // For object types, flatten the nested structure
+          const objValue = fieldData.value as any;
+          for (const [nestedKey, nestedValue] of Object.entries(objValue)) {
+            if (nestedValue && typeof nestedValue === 'object' && 'value' in (nestedValue as any)) {
+              extractedData[`${key}_${nestedKey}`] = (nestedValue as any).value;
+            }
+          }
+        } else {
+          // For simple types, use the value directly
+          extractedData[key] = fieldData.value;
+        }
+      }
+    }
+    
+    // Add fullText if available (you might need to extract this from the original result)
+    // This would require storing the OCR text from the Azure response
+    extractedData.fullText = ''; // You can enhance this later
+    
+    // Add document type correction if model changed
+    const correctedDocumentType = this.mapModelToDocumentType(result.model_used);
+    if (correctedDocumentType !== documentType) {
+      extractedData.correctedDocumentType = correctedDocumentType;
+    }
+    
+    return extractedData;
+    
+  } catch (error) {
+    console.error('Error in extractDataFromDocument:', error);
+    throw error;
+  }
 }
 
-// Export the ExtractedFieldData type for backward compatibility
-export type { ExtractedFieldData };
+/**
+ * Helper method to map Azure model names to document types
+ */
+private mapModelToDocumentType(modelId: string): string {
+  const modelMappings: Record<string, string> = {
+    'prebuilt-tax.us.w2': 'W2',
+    'prebuilt-tax.us.1099DIV': 'FORM_1099_DIV',
+    'prebuilt-tax.us.1099MISC': 'FORM_1099_MISC',
+    'prebuilt-tax.us.1099INT': 'FORM_1099_INT',
+    'prebuilt-tax.us.1099NEC': 'FORM_1099_NEC',
+    'prebuilt-tax.us.1099': 'FORM_1099_MISC', // fallback
+    'prebuilt-tax.us.1040': '1040',
+    'prebuilt-tax.us': 'UNKNOWN'
+  };
+  
+  return modelMappings[modelId] || 'UNKNOWN';
+}
+}
+
+// Types are already exported above - no need to re-export
 
 // Run main function if this file is executed directly
 if (require.main === module) {
