@@ -244,7 +244,7 @@ export class EnhancedW2ToForm1040Mapper {
         // For other codes, store for reference
         if (!form1040Data.scheduleA) form1040Data.scheduleA = {};
         if (!form1040Data.scheduleA.otherBox12Codes) form1040Data.scheduleA.otherBox12Codes = [];
-        form1040Data.scheduleA.otherBox12Codes.push({ code, amount, description: getBox12CodeDescription(code) });
+        (form1040Data.scheduleA.otherBox12Codes as Array<{ code: string; amount: number; description?: string }>).push({ code, amount, description: getBox12CodeDescription(code) });
         console.log(`✅ [Enhanced W2 MAPPER] Stored other Box 12 code (${code}): $${amount}`);
         break;
     }
