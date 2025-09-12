@@ -13,7 +13,7 @@ import {
 } from './tax-document-types';
 
 export interface ExtractedFieldData {
-  [key: string]: string | number | DocumentType | number[] | boolean | undefined;
+  [key: string]: string | number | DocumentType | number[] | boolean |Array<{ code: W2Box12Code; amount: number }> | W2Box13Checkboxes | undefined;
   correctedDocumentType?: DocumentType;
   fullText?: string;
 }
