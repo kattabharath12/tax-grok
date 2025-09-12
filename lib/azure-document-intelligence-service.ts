@@ -250,10 +250,6 @@ export class AzureDocumentIntelligenceService {
       
       // Enhanced state/local fields
       'StateEmployerID': 'stateEmployerID', // Box 15
-      'StateWagesTipsEtc': 'stateWages', // Box 16
-      'StateIncomeTax': 'stateTaxWithheld', // Box 17
-      'LocalWagesTipsEtc': 'localWages', // Box 18
-      'LocalIncomeTax': 'localTaxWithheld', // Box 19
       'LocalityName': 'localityName', // Box 20
       
       // Alternative field names
