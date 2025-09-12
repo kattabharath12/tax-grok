@@ -82,6 +82,9 @@ export interface EnhancedW2Data {
   localWages?: number; // Box 18 - Local wages, tips, etc.
   localTaxWithheld?: number; // Box 19 - Local income tax
   localityName?: string; // Box 20 - Locality name
+  
+  // Document tracking
+  documentId?: string;
 }
 
 // Enhanced 1099-DIV Data Interface with all missing fields
@@ -118,6 +121,9 @@ export interface Enhanced1099DivData {
   stateTaxWithheld?: number; // Box 14
   statePayerNumber?: string; // Box 15
   stateIncome?: number; // Box 16
+  
+  // Document tracking
+  documentId?: string;
 }
 
 // Type guards for enhanced data
