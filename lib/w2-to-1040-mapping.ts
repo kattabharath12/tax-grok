@@ -1,10 +1,18 @@
 import { Form1040Data, W2ToForm1040Mapping } from './form-1040-types';
+import { EnhancedW2ToForm1040Mapper } from './enhanced-w2-mapping';
+import { EnhancedW2Data } from './tax-document-types';
 
 export class W2ToForm1040Mapper {
   /**
    * Maps W2 extracted data to Form 1040 fields
+   * Automatically uses enhanced mapper if enhanced fields are detected
    */
   static mapW2ToForm1040(w2Data: any, existingForm1040?: Partial<Form1040Data>): Partial<Form1040Data> {
+    // Check if this is enhanced W2 data with new fields
+    if (this.hasEnhancedW2Fields(w2Data)) {
+      console.log('🔍 [W2 MAPPER] Enhanced W2 fields detected, using enhanced mapper');
+      return EnhancedW2ToForm1040Mapper.mapEnhancedW2ToForm1040(w2Data as EnhancedW2Data, existingForm1040);
+    }
     console.log('🔍 [W2 MAPPER] Starting W2 to 1040 mapping...');
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 [W2 MAPPER] Input w2Data structure:', JSON.stringify(w2Data, null, 2));
@@ -804,5 +812,21 @@ export class W2ToForm1040Mapper {
       errors,
       warnings
     };
+  }
+
+  /**
+   * Check if W2 data contains enhanced fields that require the enhanced mapper
+   */
+  private static hasEnhancedW2Fields(w2Data: any): boolean {
+    // Check for any of the new enhanced fields
+    const enhancedFields = [
+      'dependentCareBenefits', 'box12Codes', 'box12Raw', 'box13Checkboxes',
+      'advanceEIC', 'nonqualifiedPlans', 'stateEmployerID', 'localityName',
+      'otherTaxInfo'
+    ];
+    
+    return enhancedFields.some(field => 
+      w2Data[field] !== undefined && w2Data[field] !== null && w2Data[field] !== ''
+    );
   }
 }
