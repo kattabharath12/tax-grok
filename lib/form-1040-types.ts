@@ -52,7 +52,30 @@ export interface Form1040Data {
     medicalExpenses?: number;
     charitableDeductions?: number;
     mortgageInterest?: number;
-    [key: string]: number | undefined;
+    retirementPlanParticipation?: boolean;
+    thirdPartySickPay?: boolean;
+    socialSecurityTips?: number;
+    otherBox12Codes?: Array<{ code: string; amount: number; description?: string }>;
+    fatcaFilingRequired?: boolean;
+    // 1099-DIV specific fields
+    unrecapturedSection1250Gain?: number;
+    section1202Gain?: number;
+    collectiblesGain?: number;
+    section897OrdinaryDividends?: number;
+    section897CapitalGain?: number;
+    exemptInterestDividends?: number;
+    foreignTaxPaid?: number;
+    cashLiquidationDistributions?: number;
+    noncashLiquidationDistributions?: number;
+    nondividendDistributions?: number;
+    // W2 specific fields
+    advanceEIC?: number;
+    dependentCareBenefits?: number;
+    nonqualifiedPlans?: number;
+    retirementContributions?: number;
+    groupTermLifeInsurance?: number;
+    rothContributions?: number;
+    [key: string]: number | boolean | Array<{ code: string; amount: number; description?: string }> | undefined;
   };
 
   // Schedule 1 - Additional Income and Adjustments
@@ -60,7 +83,10 @@ export interface Form1040Data {
     earlyWithdrawalPenalty?: number;
     additionalIncome?: number;
     adjustments?: number;
-    [key: string]: number | undefined;
+    statutoryEmployee?: boolean;
+    hsaContributions?: number;
+    uncollectedTaxOnTips?: number;
+    [key: string]: number | boolean | undefined;
   };
 
   // State-specific data for state tax returns
