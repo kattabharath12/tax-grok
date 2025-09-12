@@ -10,9 +10,10 @@ export interface AzureDocumentIntelligenceConfig {
 }
 
 export interface ExtractedFieldData {
-  [key: string]: string | number | DocumentType | number[] | undefined;
+  [key: string]: string | number | DocumentType | number[] | boolean | Array<{ code: string; amount: number }> | undefined;
   correctedDocumentType?: DocumentType;
   fullText?: string;
+  box12Codes?: Array<{ code: string; amount: number }>;
 }
 
 export class AzureDocumentIntelligenceService {
