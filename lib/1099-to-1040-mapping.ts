@@ -1,11 +1,19 @@
 
 import { Form1040Data } from './form-1040-types';
+import { Enhanced1099DivToForm1040Mapper } from './enhanced-1099-div-mapping';
+import { Enhanced1099DivData } from './tax-document-types';
 
 export class Form1099ToForm1040Mapper {
   /**
    * Maps 1099 extracted data to Form 1040 fields
+   * Automatically uses enhanced mapper for 1099-DIV if enhanced fields are detected
    */
   static map1099ToForm1040(form1099Data: any, existingForm1040?: Partial<Form1040Data>): Partial<Form1040Data> {
+    // Check if this is enhanced 1099-DIV data with new fields
+    if (this.hasEnhanced1099DivFields(form1099Data)) {
+      console.log('🔍 [1099 MAPPER] Enhanced 1099-DIV fields detected, using enhanced mapper');
+      return Enhanced1099DivToForm1040Mapper.mapEnhanced1099DivToForm1040(form1099Data as Enhanced1099DivData, existingForm1040);
+    }
     console.log('🔍 [1099 MAPPER] Starting 1099 to 1040 mapping...');
     if (process.env.NODE_ENV === 'development') {
       console.log('🔍 [1099 MAPPER] Input 1099Data structure:', JSON.stringify(form1099Data, null, 2));
@@ -817,5 +825,22 @@ export class Form1099ToForm1040Mapper {
       errors,
       warnings
     };
+  }
+
+  /**
+   * Check if 1099 data contains enhanced 1099-DIV fields that require the enhanced mapper
+   */
+  private static hasEnhanced1099DivFields(form1099Data: any): boolean {
+    // Check for any of the new enhanced 1099-DIV fields
+    const enhanced1099DivFields = [
+      'unrecapturedSection1250Gain', 'section1202Gain', 'collectiblesGain',
+      'section897OrdinaryDividends', 'section897CapitalGain', 'exemptInterestDividends',
+      'foreignTaxPaid', 'foreignCountry', 'cashLiquidationDistributions',
+      'noncashLiquidationDistributions', 'fatcaFilingRequirement', 'investmentExpenses'
+    ];
+    
+    return enhanced1099DivFields.some(field => 
+      form1099Data[field] !== undefined && form1099Data[field] !== null && form1099Data[field] !== ''
+    );
   }
 }
