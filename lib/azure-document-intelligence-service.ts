@@ -423,6 +423,22 @@ export async function main() {
     process.exit(1);
   }
 }
+// Factory function for backward compatibility
+export function getAzureDocumentIntelligenceService(): ComprehensiveAzureExtractionService {
+  const config = {
+    endpoint: process.env.AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT || '',
+    key: process.env.AZURE_DOCUMENT_INTELLIGENCE_KEY || ''
+  };
+  
+  if (!config.endpoint || !config.key) {
+    throw new Error('Azure Document Intelligence configuration is missing. Please set AZURE_DOCUMENT_INTELLIGENCE_ENDPOINT and AZURE_DOCUMENT_INTELLIGENCE_KEY environment variables.');
+  }
+  
+  return new ComprehensiveAzureExtractionService(config);
+}
+
+// Export the ExtractedFieldData type for backward compatibility
+export type { ExtractedFieldData };
 
 // Run main function if this file is executed directly
 if (require.main === module) {
