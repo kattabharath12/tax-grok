@@ -256,4 +256,3 @@ export const CHILD_TAX_CREDIT_2023 = {
     [FilingStatus.QUALIFYING_SURVIVING_SPOUSE]: 400000
   }
 };
-
