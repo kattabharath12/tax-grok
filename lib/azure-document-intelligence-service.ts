@@ -560,7 +560,6 @@ export function getAzureDocumentIntelligenceService(): AzureDocumentIntelligence
 
 // Export all the required types and interfaces
 export {
-  AzureDocumentIntelligenceService,
   type AzureDocumentIntelligenceConfig,
   type BaseTaxDocument,
   type TaxDocumentType,
