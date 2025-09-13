@@ -109,7 +109,26 @@ export async function POST(
     
     try {
       const azureService = getAzureDocumentIntelligenceService();
-      const extractedData = await azureService.extractDataFromDocument(document.filePath, document.documentType);
+      // ✅ NEW - Gives structured fields
+let extractedData;
+switch (document.documentType) {
+  case 'W2':
+    extractedData = await azureService.extractW2(document.filePath);
+    break;
+  case 'FORM_1099_DIV':
+    extractedData = await azureService.extract1099Div(document.filePath);
+    break;
+  case 'FORM_1099_INT':
+    extractedData = await azureService.extract1099Int(document.filePath);
+    break;
+  case 'FORM_1099_MISC':
+    extractedData = await azureService.extract1099Misc(document.filePath);
+    break;
+  default:
+    // Fallback to generic method for unsupported types
+    extractedData = await azureService.extractDataFromDocument(document.filePath, document.documentType);
+    break;
+}
       
       // Check if document type was corrected based on OCR analysis
       if (extractedData.correctedDocumentType) {
