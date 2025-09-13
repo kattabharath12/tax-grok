@@ -289,6 +289,9 @@ export class AzureDocumentIntelligenceService {
         // Analyze the document with specific tax model
         const poller = await this.client.beginAnalyzeDocument(modelId, documentBuffer);
         const result = await poller.pollUntilDone();
+        console.log('🔍 [DEBUG] Raw Azure response:', JSON.stringify(result, null, 2));
+        console.log('🔍 [DEBUG] Documents found:', result.documents?.length);
+        console.log('🔍 [DEBUG] First document fields:', result.documents?.[0]?.fields);
         
         console.log('✅ [Azure DI] Document analysis completed with tax model');
         
@@ -324,6 +327,9 @@ export class AzureDocumentIntelligenceService {
           // Fallback to general OCR model
           const fallbackPoller = await this.client.beginAnalyzeDocument('prebuilt-read', documentBuffer);
           const fallbackResult = await fallbackPoller.pollUntilDone();
+          console.log('🔍 [DEBUG] Raw Azure response:', JSON.stringify(fallbackResult, null, 2));
+          console.log('🔍 [DEBUG] Documents found:', fallbackResult.documents?.length);
+          console.log('🔍 [DEBUG] First document fields:', fallbackResult.documents?.[0]?.fields);
           
           console.log('✅ [Azure DI] Document analysis completed with OCR fallback');
           
