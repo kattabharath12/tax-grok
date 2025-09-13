@@ -184,6 +184,14 @@ export interface ExtractedFieldData {
   [key: string]: any;
 }
 
+// Generic document data interface for non-tax documents
+export interface GenericDocumentData extends BaseTaxDocument {
+  documentType?: string;
+  extractedFields?: ExtractedFieldData;
+  keyValuePairs?: Array<{ key: string; value: string }>;
+  tables?: Array<any>;
+}
+
 export class AzureDocumentIntelligenceService {
   private client: DocumentAnalysisClient;
   private config: AzureDocumentIntelligenceConfig;
@@ -194,6 +202,32 @@ export class AzureDocumentIntelligenceService {
       this.config.endpoint,
       new AzureKeyCredential(this.config.apiKey)
     );
+  }
+
+  /**
+   * Generic method to extract data from any document type
+   * This method serves as a fallback for unsupported document types
+   * and delegates to specialized tax document extraction when applicable
+   */
+  public async extractDataFromDocument(filePath: string, documentType: string): Promise<TaxDocumentData | GenericDocumentData> {
+    console.log('🔍 [Azure DI] Extracting data from document:', filePath);
+    console.log('🔍 [Azure DI] Document type:', documentType);
+
+    try {
+      // Check if it's a supported tax document type
+      if (this.isSupportedTaxDocumentType(documentType)) {
+        console.log('🔍 [Azure DI] Using specialized tax document extraction');
+        return await this.extractTaxDocumentData(filePath, documentType as TaxDocumentType);
+      }
+
+      // For unsupported document types, use generic extraction
+      console.log('🔍 [Azure DI] Using generic document extraction for unsupported type:', documentType);
+      return await this.extractGenericDocument(filePath, documentType);
+
+    } catch (error: any) {
+      console.error('❌ [Azure DI] Error in extractDataFromDocument:', error);
+      throw new Error(`Failed to extract data from document: ${error?.message || 'Unknown error'}`);
+    }
   }
 
   /**
@@ -329,6 +363,95 @@ export class AzureDocumentIntelligenceService {
       console.error('❌ [Azure DI] Processing error:', error);
       throw new Error(`Azure Document Intelligence processing failed: ${error?.message || 'Unknown error'}`);
     }
+  }
+
+  /**
+   * Extract data from generic (non-tax) documents
+   */
+  private async extractGenericDocument(filePath: string, documentType: string): Promise<GenericDocumentData> {
+    try {
+      console.log('🔍 [Azure DI] Processing generic document with Azure Document Intelligence...');
+      
+      // Get document buffer
+      const documentBuffer = await readFile(filePath);
+      
+      // Use general document analysis model
+      const modelId = 'prebuilt-document'; // General document model
+      console.log('🔍 [Azure DI] Using generic model:', modelId);
+      
+      try {
+        // Analyze the document with general model
+        const poller = await this.client.beginAnalyzeDocument(modelId, documentBuffer);
+        const result = await poller.pollUntilDone();
+        
+        console.log('✅ [Azure DI] Generic document analysis completed');
+        
+        // Extract generic data
+        const extractedData: GenericDocumentData = {
+          fullText: result.content || '',
+          documentType: documentType,
+          extractedFields: {},
+          keyValuePairs: [],
+          tables: []
+        };
+
+        // Extract key-value pairs
+        if (result.keyValuePairs) {
+          for (const kvp of result.keyValuePairs) {
+            const key = kvp.key?.content?.trim();
+            const value = kvp.value?.content?.trim();
+            if (key && value) {
+              extractedData.keyValuePairs!.push({ key, value });
+              extractedData.extractedFields![key] = value;
+            }
+          }
+        }
+
+        // Extract tables
+        if (result.tables) {
+          extractedData.tables = result.tables.map((table: any) => ({
+            rowCount: table.rowCount,
+            columnCount: table.columnCount,
+            cells: table.cells?.map((cell: any) => ({
+              content: cell.content,
+              rowIndex: cell.rowIndex,
+              columnIndex: cell.columnIndex
+            })) || []
+          }));
+        }
+
+        return extractedData;
+
+      } catch (modelError: any) {
+        console.warn('⚠️ [Azure DI] Generic model failed, falling back to OCR:', modelError?.message);
+        
+        // Fallback to OCR-only extraction
+        const fallbackPoller = await this.client.beginAnalyzeDocument('prebuilt-read', documentBuffer);
+        const fallbackResult = await fallbackPoller.pollUntilDone();
+        
+        console.log('✅ [Azure DI] OCR fallback completed for generic document');
+        
+        return {
+          fullText: fallbackResult.content || '',
+          documentType: documentType,
+          extractedFields: {},
+          keyValuePairs: [],
+          tables: []
+        };
+      }
+
+    } catch (error: any) {
+      console.error('❌ [Azure DI] Generic document processing error:', error);
+      throw new Error(`Generic document processing failed: ${error?.message || 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Check if the document type is a supported tax document type
+   */
+  private isSupportedTaxDocumentType(documentType: string): boolean {
+    const supportedTypes: TaxDocumentType[] = ['W2', 'FORM_1099_INT', 'FORM_1099_DIV', 'FORM_1099_MISC', 'FORM_1099_NEC'];
+    return supportedTypes.includes(documentType as TaxDocumentType);
   }
 
   /**
@@ -600,5 +723,6 @@ export {
   type Form1099DivData,
   type Form1099MiscData,
   type TaxDocumentData,
-  type ExtractedFieldData
+  type ExtractedFieldData,
+  type GenericDocumentData
 };
