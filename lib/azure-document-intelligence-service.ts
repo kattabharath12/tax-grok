@@ -715,7 +715,6 @@ export function getAzureDocumentIntelligenceService(): AzureDocumentIntelligence
 
 // Export all the required types and interfaces
 export {
-  type AzureDocumentIntelligenceConfig,
   type BaseTaxDocument,
   type TaxDocumentType,
   type W2Data,
