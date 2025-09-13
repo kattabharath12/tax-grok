@@ -197,6 +197,38 @@ export class AzureDocumentIntelligenceService {
   }
 
   /**
+   * Extract W2 tax document data
+   */
+  public async extractW2(filePath: string): Promise<W2Data> {
+    console.log('🔍 [Azure DI] Extracting W2 document from:', filePath);
+    return await this.extractTaxDocumentData(filePath, 'W2') as W2Data;
+  }
+
+  /**
+   * Extract 1099-DIV tax document data
+   */
+  public async extract1099Div(filePath: string): Promise<Form1099DivData> {
+    console.log('🔍 [Azure DI] Extracting 1099-DIV document from:', filePath);
+    return await this.extractTaxDocumentData(filePath, 'FORM_1099_DIV') as Form1099DivData;
+  }
+
+  /**
+   * Extract 1099-INT tax document data
+   */
+  public async extract1099Int(filePath: string): Promise<Form1099IntData> {
+    console.log('🔍 [Azure DI] Extracting 1099-INT document from:', filePath);
+    return await this.extractTaxDocumentData(filePath, 'FORM_1099_INT') as Form1099IntData;
+  }
+
+  /**
+   * Extract 1099-MISC tax document data
+   */
+  public async extract1099Misc(filePath: string): Promise<Form1099MiscData> {
+    console.log('🔍 [Azure DI] Extracting 1099-MISC document from:', filePath);
+    return await this.extractTaxDocumentData(filePath, 'FORM_1099_MISC') as Form1099MiscData;
+  }
+
+  /**
    * Extract data from tax documents (W2, 1099-DIV, 1099-INT, 1099-MISC)
    */
   async extractTaxDocumentData(
