@@ -714,14 +714,4 @@ export function getAzureDocumentIntelligenceService(): AzureDocumentIntelligence
 }
 
 // Export all the required types and interfaces
-export {
-  type BaseTaxDocument,
-  type TaxDocumentType,
-  type W2Data,
-  type Form1099IntData,
-  type Form1099DivData,
-  type Form1099MiscData,
-  type TaxDocumentData,
-  type ExtractedFieldData,
-  type GenericDocumentData
-};
+// All exports are now inline - no export block needed
